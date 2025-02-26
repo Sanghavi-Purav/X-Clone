@@ -1,6 +1,7 @@
 import { Router } from "express";
 import { protectRoute } from "../middleware/protectRoute.js";
 import {
+	deleteNotification,
 	deleteNotifications,
 	getNotifications,
 } from "../controllers/notificationControllers.js";
@@ -8,4 +9,5 @@ import {
 const router = Router();
 router.get("/", protectRoute, getNotifications);
 router.delete("/", protectRoute, deleteNotifications);
+router.delete("/:id", protectRoute, deleteNotification);
 export default router;
