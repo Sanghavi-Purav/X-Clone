@@ -26,6 +26,7 @@ function App() {
 				throw new Error(error);
 			}
 		},
+		retry: false,
 	});
 	if (isLoading) {
 		return (

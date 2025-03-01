@@ -11,15 +11,15 @@ export const protectRoute = async (req, res, next) => {
 		// console.log(token);
 
 		if (!token) {
-			res.status(401).json({ error: "You need to login or Register" });
+			return res.status(401).json({ error: "You need to login or Register" });
 		}
 		const verifytoken = jwt.verify(token, process.env.JWT_SECRET);
 		if (!verifytoken) {
-			res.status(401).json({ error: "Unauthorized: Invalid token" });
+			return res.status(401).json({ error: "Unauthorized: Invalid token" });
 		}
 		const user = await User.findById(verifytoken.userid).select("-password");
 		if (!user) {
-			res.status(401).json({ error: "User not found" });
+			return res.status(401).json({ error: "User not found" });
 		}
 		req.user = user;
 		next();
