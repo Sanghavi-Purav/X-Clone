@@ -22,6 +22,8 @@ const LoginPage = () => {
 	} = useMutation({
 		mutationFn: async ({ username, password }) => {
 			try {
+				console.log(password);
+
 				const res = await fetch("/api//auth/login", {
 					method: "POST",
 					headers: { "Content-Type": "application/json" },
@@ -29,11 +31,10 @@ const LoginPage = () => {
 				});
 				const data = await res.json();
 				if (!res.ok) {
-					throw new error(data.error);
+					throw new Error(data.error);
 				}
 			} catch (error) {
-				console.error(error);
-				throw error;
+				throw new Error(error);
 			}
 		},
 		onSuccess: () => {
@@ -83,7 +84,7 @@ const LoginPage = () => {
 						/>
 					</label>
 					<button className="btn rounded-full btn-primary text-white">
-						Login
+						{isPending ? "Loading..." : "Login"}
 					</button>
 					{isError && <p className="text-red-500">{error.message}</p>}
 				</form>
