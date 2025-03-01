@@ -15,7 +15,7 @@ const LoginPage = () => {
 	});
 	const queryClinet = useQueryClient();
 	const {
-		mutate = loginMutation,
+		mutate: loginMutation,
 		isError,
 		isPending,
 		error,
