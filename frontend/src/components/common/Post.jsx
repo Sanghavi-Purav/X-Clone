@@ -5,11 +5,14 @@ import { FaRegBookmark } from "react-icons/fa6";
 import { FaTrash } from "react-icons/fa";
 import { useState } from "react";
 import { Link } from "react-router-dom";
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import toast from "react-hot-toast";
+import LoadingSpinner from "./LoadingSpinner";
 
 const Post = ({ post }) => {
 	const [comment, setComment] = useState("");
 	const { data: authUser } = useQuery({ queryKey: ["authUser"] });
+	const queryClinet = useQueryClient();
 	const { mutate: deletePost, isPending } = useMutation({
 		mutationFn: async () => {
 			try {
@@ -22,6 +25,9 @@ const Post = ({ post }) => {
 				throw new Error(error);
 			}
 		},
+		onSuccess: () => {
+			queryClinet.invalidateQueries({ queryKey: ["posts"] });
+		},
 	});
 	const postOwner = post.user;
 	const isLiked = false;
@@ -32,7 +38,9 @@ const Post = ({ post }) => {
 
 	const isCommenting = false;
 
-	const handleDeletePost = () => {};
+	const handleDeletePost = () => {
+		deletePost();
+	};
 
 	const handlePostComment = (e) => {
 		e.preventDefault();
@@ -65,10 +73,13 @@ const Post = ({ post }) => {
 						</span>
 						{isMyPost && (
 							<span className="flex justify-end flex-1">
-								<FaTrash
-									className="cursor-pointer hover:text-red-500"
-									onClick={handleDeletePost}
-								/>
+								{!isPending && (
+									<FaTrash
+										className="cursor-pointer hover:text-red-500"
+										onClick={handleDeletePost}
+									/>
+								)}
+								{isPending && <LoadingSpinner size="sm" />}
 							</span>
 						)}
 					</div>

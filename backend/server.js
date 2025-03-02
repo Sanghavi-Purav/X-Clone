@@ -1,4 +1,4 @@
-import express from "express";
+import express, { urlencoded } from "express";
 import authRoutes from "./routes/authRoutes.js";
 import dotenv from "dotenv";
 import { connectToMongodb } from "./db/connectToMongodb.js";
@@ -10,7 +10,8 @@ import { v2 as cloudinary } from "cloudinary";
 
 const app = express();
 dotenv.config();
-app.use(express.json());
+app.use(express.json({ limit: "5mb" }));
+app.use(urlencoded({ extended: true }));
 app.use(cookieParser());
 cloudinary.config({
 	cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
