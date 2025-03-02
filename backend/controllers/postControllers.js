@@ -64,6 +64,7 @@ export const likePost = async (req, res) => {
 	try {
 		let notification;
 		const { id } = req.params;
+		const userId = req.user._id;
 		const current_post = await Post.findById(id);
 		if (!current_post) {
 			return res.status(400).json({ error: "Post does not exist" });
@@ -72,7 +73,10 @@ export const likePost = async (req, res) => {
 		if (isLiking) {
 			await Post.findByIdAndUpdate(id, { $pull: { likes: req.user._id } });
 			await User.findByIdAndUpdate(req.user._id, { $pull: { likedposts: id } });
-			res.status(200).json({ message: "dislike successfull" });
+			const updatedLikes = current_post.likes.filter(
+				(id) => id.toString() !== userId.toString()
+			);
+			res.status(200).json(updatedLikes);
 		} else {
 			await Post.findByIdAndUpdate(id, { $push: { likes: req.user._id } });
 			await User.findByIdAndUpdate(req.user._id, { $push: { likedposts: id } });

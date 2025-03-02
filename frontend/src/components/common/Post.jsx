@@ -13,7 +13,7 @@ const Post = ({ post }) => {
 	const [comment, setComment] = useState("");
 	const { data: authUser } = useQuery({ queryKey: ["authUser"] });
 	const queryClinet = useQueryClient();
-	const { mutate: deletePost, isPending } = useMutation({
+	const { mutate: deletePost, isPending: isDeleting } = useMutation({
 		mutationFn: async () => {
 			try {
 				const res = await fetch(`/api/posts/${post._id}`, { method: "DELETE" });
@@ -29,6 +29,25 @@ const Post = ({ post }) => {
 			queryClinet.invalidateQueries({ queryKey: ["posts"] });
 		},
 	});
+	const { mutate: likePost, isPending: isLiking } = useMutation({
+		mutationFn: async () => {
+			try {
+				const res = await fetch(`/api/posts/like/${post._id}`, {
+					method: "POST",
+					headers: {
+						"Content-Type": "application/json",
+					},
+				});
+				const data = await res.json();
+				if (!res.ok) {
+					throw new Error(data.error || "Something went wrong");
+				}
+			} catch (error) {
+				throw new Error(error);
+			}
+		},
+	});
+
 	const postOwner = post.user;
 	const isLiked = false;
 
@@ -73,13 +92,13 @@ const Post = ({ post }) => {
 						</span>
 						{isMyPost && (
 							<span className="flex justify-end flex-1">
-								{!isPending && (
+								{!isDeleting && (
 									<FaTrash
 										className="cursor-pointer hover:text-red-500"
 										onClick={handleDeletePost}
 									/>
 								)}
-								{isPending && <LoadingSpinner size="sm" />}
+								{isDeleting && <LoadingSpinner size="sm" />}
 							</span>
 						)}
 					</div>
