@@ -10,12 +10,12 @@ export const createPost = async (req, res) => {
 		const userid = req.user._id.toString();
 		const currentuser = await User.findById(userid).select("-password");
 		if (!currentuser) {
-			return res.status(404).json({ message: "User not found" });
+			return res.status(404).json({ error: "User not found" });
 		}
 		if (!text && !img) {
 			return res
 				.status(400)
-				.json({ message: "Image and Descreption are required " });
+				.json({ error: "Image and Descreption are required " });
 		}
 
 		if (img) {
@@ -30,7 +30,7 @@ export const createPost = async (req, res) => {
 			.json({ message: "Post has been successfully created" });
 	} catch (error) {
 		console.log("Error in the createPost controller");
-		res.status(500).json({ message: "Internal Server Error" });
+		res.status(500).json({ error: "Internal Server Error" });
 	}
 };
 
@@ -39,12 +39,12 @@ export const deletePost = async (req, res) => {
 		const { id } = req.params;
 		const current_post = await Post.findById(id);
 		if (!current_post) {
-			return res.status(400).json({ message: "Post not found" });
+			return res.status(400).json({ error: "Post not found" });
 		}
 		if (current_post.user.toString() !== req.user._id.toString()) {
 			return res
 				.status(400)
-				.json({ message: "You are not authorized to delete this post" });
+				.json({ error: "You are not authorized to delete this post" });
 		}
 		if (current_post.img) {
 			await cloudinary.uploader.destroy(
@@ -56,7 +56,7 @@ export const deletePost = async (req, res) => {
 		res.status(200).json({ message: "Post has been successfully deleted" });
 	} catch (error) {
 		console.log("Error in the deletePost controller : ", error);
-		res.status(500).json({ message: "Internal server error" });
+		res.status(500).json({ error: "Internal server error" });
 	}
 };
 
@@ -66,7 +66,7 @@ export const likePost = async (req, res) => {
 		const { id } = req.params;
 		const current_post = await Post.findById(id);
 		if (!current_post) {
-			return res.status(400).json({ message: "Post does not exist" });
+			return res.status(400).json({ error: "Post does not exist" });
 		}
 		const isLiking = current_post.likes.includes(req.user._id);
 		if (isLiking) {
@@ -87,7 +87,7 @@ export const likePost = async (req, res) => {
 		}
 	} catch (error) {
 		console.log(`Error in the likePost controller : ${error}`);
-		res.status(500).json({ message: "Internal Server Error" });
+		res.status(500).json({ error: "Internal Server Error" });
 	}
 };
 
@@ -98,7 +98,7 @@ export const commentPost = async (req, res) => {
 		const current_post = await Post.findById(id);
 		const current_user = await User.findById(req.user._id);
 		if (!current_post) {
-			return res.status(400).json({ message: "Post does not exist" });
+			return res.status(400).json({ error: "Post does not exist" });
 		}
 		let is_comment_included = current_post.comments.some(
 			(c) => c.user.toString() === req.user._id.toString() && c.text === comment
@@ -106,7 +106,7 @@ export const commentPost = async (req, res) => {
 		if (is_comment_included) {
 			return res
 				.status(400)
-				.json({ message: "You have already posted this comment" });
+				.json({ error: "You have already posted this comment" });
 		}
 		await Post.findByIdAndUpdate(id, {
 			$push: { comments: { text: comment, user: req.user._id } },
@@ -115,7 +115,7 @@ export const commentPost = async (req, res) => {
 		res.status(200).json({ message: "comment successfull" });
 	} catch (error) {
 		console.log("Error in the commentPost controller", error);
-		res.status(500).json({ message: "Internal Server Error" });
+		res.status(500).json({ error: "Internal Server Error" });
 	}
 };
 
@@ -132,7 +132,7 @@ export const getAllPost = async (req, res) => {
 		res.status(200).json(posts);
 	} catch (error) {
 		console.log(`Error in the getAllPost controller ${error}`);
-		res.status(500).json({ message: "Internal Server Error" });
+		res.status(500).json({ error: "Internal Server Error" });
 	}
 };
 
@@ -141,7 +141,7 @@ export const getLikedPosts = async (req, res) => {
 		const { id } = req.params;
 		const user = await User.findById(id);
 		if (!user) {
-			return res.status(404).json({ message: "User not found" });
+			return res.status(404).json({ error: "User not found" });
 		}
 		const liked_Posts = await Post.find({ _id: { $in: user.likedposts } })
 			.populate({ path: "user", select: "-password" })
@@ -151,7 +151,7 @@ export const getLikedPosts = async (req, res) => {
 		res.status(200).json(liked_Posts);
 	} catch (error) {
 		console.log(`Error in the getlikedposts controller : ${error}`);
-		res.status(500).json({ message: "Internal Server Error" });
+		res.status(500).json({ error: "Internal Server Error" });
 	}
 };
 
@@ -174,7 +174,7 @@ export const getFollowingPosts = async (req, res) => {
 		res.status(200).json(following_posts);
 	} catch (error) {
 		console.log(`Error in the getFollowingPosts : ${error}`);
-		res.status(500).json({ message: "Internal Server Error" });
+		res.status(500).json({ error: "Internal Server Error" });
 	}
 };
 
@@ -185,7 +185,7 @@ export const getUserPosts = async (req, res) => {
 		console.log(post_user);
 
 		if (!post_user) {
-			return res.status(404).json({ message: "User not found" });
+			return res.status(404).json({ error: "User not found" });
 		}
 		let user_posts = await Post.find({ user: post_user._id })
 			.sort({ createdAt: -1 })
@@ -194,6 +194,6 @@ export const getUserPosts = async (req, res) => {
 		res.status(200).json(user_posts);
 	} catch (error) {
 		console.log(`Erro in getUserPosts controller : ${error}`);
-		res.status(500).json({ message: "Internal Server Error" });
+		res.status(500).json({ error: "Internal Server Error" });
 	}
 };
