@@ -64,8 +64,36 @@ const Post = ({ post }) => {
 	const { mutate: commentOnPost, isPending: isCommenting } = useMutation({
 		mutationFn: async () => {
 			try {
-				const res = await fetch();
-			} catch (error) {}
+				const res = await fetch(`/api/posts/comment/${post._id}`, {
+					method: "POST",
+					headers: { "Content-Type": "application/json" },
+					body: JSON.stringify({ comment: comment }),
+				});
+				const data = await res.json();
+				if (!res.ok) {
+					throw new Error(data.error || "Something went wrong");
+				}
+				return data;
+			} catch (error) {
+				throw new Error(error);
+			}
+		},
+		onSuccess: () => {
+			["forYou", "following"].forEach((feedType) => {
+				queryClient.setQueryData(["posts", feedType], (oldData) => {
+					return oldData.map((p) => {
+						if (p._id.toString() === post._id.toString()) {
+							return {
+								...p,
+								comments: [...p.comments, { text: comment, user: authUser }],
+							};
+						}
+						return p;
+					});
+				});
+			});
+			setComment("");
+			console.log("Comment state cleared");
 		},
 	});
 
@@ -84,6 +112,10 @@ const Post = ({ post }) => {
 
 	const handlePostComment = (e) => {
 		e.preventDefault();
+		if (isCommenting) {
+			return;
+		}
+		commentOnPost();
 	};
 
 	const handleLikePost = () => {
