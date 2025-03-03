@@ -1,11 +1,13 @@
 import { useRef, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useParams } from "react-router-dom";
 
 import Posts from "../../components/common/Posts";
 import ProfileHeaderSkeleton from "../../components/skeletons/ProfileHeaderSkeleton";
 import EditProfileModal from "./EditProfileModal";
 
 import { POSTS } from "../../utils/db/dummy";
+
+import { formatMemberSinceDate } from "../../utils/date/index.js";
 
 import { FaArrowLeft } from "react-icons/fa6";
 import { IoCalendarOutline } from "react-icons/io5";
@@ -16,24 +18,26 @@ import { useQuery } from "@tanstack/react-query";
 const ProfilePage = () => {
 	const [coverImg, setCoverImg] = useState(null);
 	const [profileImg, setProfileImg] = useState(null);
-	const [feedType, setFeedType] = useState("posts");
+	const [feedType, setFeedType] = useState("Posts");
+
+	const { username } = useParams();
 
 	const coverImgRef = useRef(null);
 	const profileImgRef = useRef(null);
 	const isLoading = false;
 	const isMyProfile = true;
 
-	const user = {
-		_id: "1",
-		fullName: "John Doe",
-		username: "johndoe",
-		profileImg: "/avatars/boy2.png",
-		coverImg: "/cover.png",
-		bio: "Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
-		link: "https://youtube.com/@asaprogrammer_",
-		following: ["1", "2", "3"],
-		followers: ["1", "2", "3"],
-	};
+	// const user = {
+	// 	_id: "1",
+	// 	fullName: "John Doe",
+	// 	username: "johndoe",
+	// 	profileImg: "/avatars/boy2.png",
+	// 	coverImg: "/cover.png",
+	// 	bio: "Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
+	// 	link: "https://youtube.com/@asaprogrammer_",
+	// 	following: ["1", "2", "3"],
+	// 	followers: ["1", "2", "3"],
+	// };
 
 	const handleImgChange = (e, state) => {
 		const file = e.target.files[0];
@@ -46,6 +50,23 @@ const ProfilePage = () => {
 			reader.readAsDataURL(file);
 		}
 	};
+
+	const { data: user } = useQuery({
+		queryKey: ["profileUser"],
+		queryFn: async () => {
+			try {
+				const res = await fetch(`/api/users/profile/${username}`);
+				const data = await res.json();
+				if (!res.ok) {
+					throw new Error(data.error || "Something went wrong");
+				}
+
+				return data;
+			} catch (error) {
+				throw new Error(error);
+			}
+		},
+	});
 
 	return (
 		<>
@@ -168,7 +189,7 @@ const ProfilePage = () => {
 									<div className="flex gap-2 items-center">
 										<IoCalendarOutline className="w-4 h-4 text-slate-500" />
 										<span className="text-sm text-slate-500">
-											Joined July 2021
+											{formatMemberSinceDate(user.createdAt)}
 										</span>
 									</div>
 								</div>
@@ -190,19 +211,19 @@ const ProfilePage = () => {
 							<div className="flex w-full border-b border-gray-700 mt-4">
 								<div
 									className="flex justify-center flex-1 p-3 hover:bg-secondary transition duration-300 relative cursor-pointer"
-									onClick={() => setFeedType("posts")}
+									onClick={() => setFeedType("Posts")}
 								>
 									Posts
-									{feedType === "posts" && (
+									{feedType === "Posts" && (
 										<div className="absolute bottom-0 w-10 h-1 rounded-full bg-primary" />
 									)}
 								</div>
 								<div
 									className="flex justify-center flex-1 p-3 text-slate-500 hover:bg-secondary transition duration-300 relative cursor-pointer"
-									onClick={() => setFeedType("likes")}
+									onClick={() => setFeedType("Likes")}
 								>
 									Likes
-									{feedType === "likes" && (
+									{feedType === "Likes" && (
 										<div className="absolute bottom-0 w-10  h-1 rounded-full bg-primary" />
 									)}
 								</div>
@@ -210,7 +231,7 @@ const ProfilePage = () => {
 						</>
 					)}
 
-					<Posts />
+					<Posts feedType={feedType} username={username} />
 				</div>
 			</div>
 		</>

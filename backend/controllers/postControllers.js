@@ -149,15 +149,15 @@ export const getAllPost = async (req, res) => {
 
 export const getLikedPosts = async (req, res) => {
 	try {
-		const { id } = req.params;
-		const user = await User.findById(id);
+		const { username } = req.params;
+		const user = await User.findOne({ username });
+
 		if (!user) {
 			return res.status(404).json({ error: "User not found" });
 		}
 		const liked_Posts = await Post.find({ _id: { $in: user.likedposts } })
 			.populate({ path: "user", select: "-password" })
 			.populate({ path: "comments.user", select: "-password" });
-		// console.log(liked_Posts);
 
 		res.status(200).json(liked_Posts);
 	} catch (error) {
@@ -193,7 +193,6 @@ export const getUserPosts = async (req, res) => {
 	try {
 		const { username } = req.params;
 		const post_user = await User.findOne({ username });
-		console.log(post_user);
 
 		if (!post_user) {
 			return res.status(404).json({ error: "User not found" });
