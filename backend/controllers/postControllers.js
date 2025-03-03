@@ -71,14 +71,20 @@ export const likePost = async (req, res) => {
 		}
 		const isLiking = current_post.likes.includes(req.user._id);
 		if (isLiking) {
-			await Post.findByIdAndUpdate(id, { $pull: { likes: req.user._id } });
-			await User.findByIdAndUpdate(req.user._id, { $pull: { likedposts: id } });
-			const updatedLikes = current_post.likes.filter(
-				(id) => id.toString() !== userId.toString()
+			const updatedPost = await Post.findByIdAndUpdate(
+				id,
+				{ $pull: { likes: req.user._id } },
+				{ new: true }
 			);
+			await User.findByIdAndUpdate(req.user._id, { $pull: { likedposts: id } });
+			const updatedLikes = updatedPost.likes;
 			res.status(200).json(updatedLikes);
 		} else {
-			await Post.findByIdAndUpdate(id, { $push: { likes: req.user._id } });
+			const updatedPost = await Post.findByIdAndUpdate(
+				id,
+				{ $push: { likes: req.user._id } },
+				{ new: true }
+			);
 			await User.findByIdAndUpdate(req.user._id, { $push: { likedposts: id } });
 			notification = new Notification({
 				from: req.user._id,
@@ -86,8 +92,9 @@ export const likePost = async (req, res) => {
 				type: "like",
 			});
 
+			const updatedLikes = updatedPost.likes;
 			await notification.save();
-			res.status(200).json({ message: "like successfull" });
+			res.status(200).json(updatedLikes);
 		}
 	} catch (error) {
 		console.log(`Error in the likePost controller : ${error}`);
