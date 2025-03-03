@@ -5,39 +5,28 @@ import Posts from "../../components/common/Posts";
 import ProfileHeaderSkeleton from "../../components/skeletons/ProfileHeaderSkeleton";
 import EditProfileModal from "./EditProfileModal";
 
-import { POSTS } from "../../utils/db/dummy";
-
 import { formatMemberSinceDate } from "../../utils/date/index.js";
 
 import { FaArrowLeft } from "react-icons/fa6";
 import { IoCalendarOutline } from "react-icons/io5";
 import { FaLink } from "react-icons/fa";
 import { MdEdit } from "react-icons/md";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 
 const ProfilePage = () => {
 	const [coverImg, setCoverImg] = useState(null);
 	const [profileImg, setProfileImg] = useState(null);
 	const [feedType, setFeedType] = useState("Posts");
+	const [followData, setfollowData] = useState(null);
 
 	const { username } = useParams();
 
+	const { data: authUser } = useQuery({ queryKey: ["authUser"] });
 	const coverImgRef = useRef(null);
 	const profileImgRef = useRef(null);
 	const isLoading = false;
-	const isMyProfile = true;
 
-	// const user = {
-	// 	_id: "1",
-	// 	fullName: "John Doe",
-	// 	username: "johndoe",
-	// 	profileImg: "/avatars/boy2.png",
-	// 	coverImg: "/cover.png",
-	// 	bio: "Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
-	// 	link: "https://youtube.com/@asaprogrammer_",
-	// 	following: ["1", "2", "3"],
-	// 	followers: ["1", "2", "3"],
-	// };
+	const queryClient = useQueryClient();
 
 	const handleImgChange = (e, state) => {
 		const file = e.target.files[0];
@@ -51,7 +40,7 @@ const ProfilePage = () => {
 		}
 	};
 
-	const { data: user } = useQuery({
+	const { data: profiledata } = useQuery({
 		queryKey: ["profileUser"],
 		queryFn: async () => {
 			try {
@@ -65,6 +54,36 @@ const ProfilePage = () => {
 			} catch (error) {
 				throw new Error(error);
 			}
+		},
+	});
+	const user = profiledata?.user;
+	const post_counts = profiledata?.post_counts;
+
+	let isMyProfile = authUser?._id === user?._id;
+
+	const { mutate: followUser } = useMutation({
+		mutationFn: async () => {
+			try {
+				console.log(user._id);
+
+				const res = await fetch(`/api/users/follow/${user?._id}`, {
+					method: "POST",
+					headers: { "Content-Type": "application/json" },
+				});
+				const data = await res.json();
+				if (!res.ok) {
+					throw new Error(data.error);
+				}
+				console.log(data);
+
+				return data;
+			} catch (error) {
+				throw new Error(error);
+			}
+		},
+		onSuccess: (data) => {
+			setfollowData(data);
+			queryClient.invalidateQueries({ queryKey: ["profileUser"] });
 		},
 	});
 
@@ -86,7 +105,7 @@ const ProfilePage = () => {
 								<div className="flex flex-col">
 									<p className="font-bold text-lg">{user?.fullName}</p>
 									<span className="text-sm text-slate-500">
-										{POSTS?.length} posts
+										{post_counts} posts
 									</span>
 								</div>
 							</div>
@@ -146,9 +165,11 @@ const ProfilePage = () => {
 								{!isMyProfile && (
 									<button
 										className="btn btn-outline rounded-full btn-sm"
-										onClick={() => alert("Followed successfully")}
+										onClick={() => followUser()}
 									>
-										Follow
+										{followData?.message.split(" ")[1] === "unfollowed"
+											? "Follow"
+											: "Unfollow"}
 									</button>
 								)}
 								{(coverImg || profileImg) && (

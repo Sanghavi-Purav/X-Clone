@@ -3,6 +3,7 @@ import Notification from "../models/notificationModel.js";
 import User from "../models/userModel.js";
 import bcrypt from "bcryptjs";
 import { v2 as cloudinary } from "cloudinary";
+import Post from "../models/postModel.js";
 
 export const getUserProfile = async (req, res) => {
 	try {
@@ -11,7 +12,9 @@ export const getUserProfile = async (req, res) => {
 		if (!user) {
 			return res.status(404).json({ message: "User not found" });
 		}
-		res.status(200).json(user);
+		const user_posts = await Post.find({ user: user._id });
+
+		res.status(200).json({ user, post_counts: user_posts.length });
 	} catch (error) {
 		console.log("error in getUserProfile controller", error.message);
 		res.status(500).json({ error: "Internal Server Error" });
@@ -28,7 +31,7 @@ export const followUnfollowUser = async (req, res) => {
 		if (!usertomodify || !currentuser) {
 			return res.status(400).json({ message: "User not found" });
 		}
-		if (id === req.user._id.toString) {
+		if (id === req.user._id.toString()) {
 			return res
 				.status(400)
 				.json({ message: "You can't follow/unfollow yourself" });
