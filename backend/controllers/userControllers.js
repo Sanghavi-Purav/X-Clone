@@ -36,7 +36,6 @@ export const followUnfollowUser = async (req, res) => {
 				.status(400)
 				.json({ message: "You can't follow/unfollow yourself" });
 		}
-		console.log(id, req.user._id);
 
 		const isFollowing = currentuser.following.includes(id);
 		if (isFollowing) {
@@ -75,7 +74,6 @@ export const updateUserProfile = async (req, res) => {
 			bio,
 			link,
 		} = req.body;
-		console.log(email);
 
 		let { profileImg, coverImg } = req.body;
 		const userid = req.user._id;

@@ -18,7 +18,6 @@ export const handleLogin = async (req, res) => {
 			return res.status(400).json({ error: "Password is incorrect" });
 		}
 		const token = user.generateToken();
-		// console.log(token);
 
 		res.cookie("jwt", token, {
 			maxAge: 15 * 24 * 60 * 60 * 1000,

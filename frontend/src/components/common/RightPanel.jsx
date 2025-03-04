@@ -3,14 +3,9 @@ import RightPanelSkeleton from "../skeletons/RightPanelSkeleton.jsx";
 import LoadingSpinner from "./LoadingSpinner.jsx";
 import { useQuery } from "@tanstack/react-query";
 import useFollow from "../../hooks/useFollow.jsx";
-import { useEffect } from "react";
 
 const RightPanel = () => {
-	const {
-		data: suggestedUsers,
-		isLoading,
-		refetch,
-	} = useQuery({
+	const { data: suggestedUsers, isLoading } = useQuery({
 		queryKey: ["suggestedUsers"],
 		queryFn: async () => {
 			try {

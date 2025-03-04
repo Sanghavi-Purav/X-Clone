@@ -31,6 +31,5 @@ app.use("/api/notifications", notifcationRoutes);
 
 app.listen(PORT, (req, res) => {
 	console.log("server is up and running");
-	// console.log(process.env.MONGO_URI);
 	connectToMongodb();
 });

@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 
 import Posts from "../../components/common/Posts";
@@ -40,7 +40,7 @@ const ProfilePage = () => {
 		}
 	};
 
-	const { data: profiledata } = useQuery({
+	const { data: profiledata, refetch } = useQuery({
 		queryKey: ["profileUser"],
 		queryFn: async () => {
 			try {
@@ -56,6 +56,11 @@ const ProfilePage = () => {
 			}
 		},
 	});
+
+	useEffect(() => {
+		refetch();
+	});
+
 	const user = profiledata?.user;
 	const post_counts = profiledata?.post_counts;
 
@@ -83,6 +88,30 @@ const ProfilePage = () => {
 		},
 		onSuccess: (data) => {
 			setfollowData(data);
+			queryClient.invalidateQueries({ queryKey: ["profileUser"] });
+			queryClient.invalidateQueries({ queryKey: ["suggestedUsers"] });
+		},
+	});
+
+	const { mutate: updateUser, isPending } = useMutation({
+		mutationFn: async () => {
+			try {
+				const res = await fetch("/api/users/update", {
+					method: "POST",
+					headers: { "Content-Type": "application/json" },
+					body: JSON.stringify({ coverImg, profileImg }),
+				});
+				const data = await res.json();
+				if (!res.ok) {
+					throw new Error(data.error || "Something went wrong");
+				}
+				return data;
+			} catch (error) {
+				throw new Error(error);
+			}
+		},
+		onSuccess: () => {
+			queryClient.invalidateQueries({ queryKey: ["authUser"] });
 			queryClient.invalidateQueries({ queryKey: ["profileUser"] });
 		},
 	});
@@ -167,17 +196,17 @@ const ProfilePage = () => {
 										className="btn btn-outline rounded-full btn-sm"
 										onClick={() => followUser()}
 									>
-										{followData?.message.split(" ")[1] === "unfollowed"
-											? "Follow"
-											: "Unfollow"}
+										{user?.followers?.includes(authUser?._id)
+											? "Unfollow"
+											: "Follow"}
 									</button>
 								)}
 								{(coverImg || profileImg) && (
 									<button
 										className="btn btn-primary rounded-full btn-sm text-white px-4 ml-2"
-										onClick={() => alert("Profile updated successfully")}
+										onClick={() => updateUser()}
 									>
-										Update
+										{isPending ? "Updating..." : "Update"}
 									</button>
 								)}
 							</div>
